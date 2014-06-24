@@ -1,7 +1,5 @@
 # finance-scraper
 
-Part of [techforelissa/finance](https://github.com/techforelissa/finance)
-
 ## Instructions
 ```bash
 $ pip install dc-campaign-finance-data
