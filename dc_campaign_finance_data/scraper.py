@@ -86,5 +86,3 @@ def committees(office, year):
         return [tr.td.text for tr in soup.table.find_all('tr')][:-1]
     except AttributeError:
         return []
-
-
