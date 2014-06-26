@@ -95,5 +95,31 @@ def races(**kwargs):
         nl=False
     )
 
+
+@cli.command(short_help='List of records by race and year (JSON)')
+@click.option('--office',
+              default='Council At-Large',
+              show_default=True,
+              type=click.Choice(scraper.offices()))
+@click.option('--year',
+              default=datetime.datetime.now().year,
+              show_default=True,
+              type=click.IntRange(*year_range))
+@click.option('--report-type',
+              default='con',
+              help='exp -> expenses, con -> contributions',
+              type=click.Choice(['exp', 'con']),
+              show_default=True)
+def records_json(**kwargs):
+    '''
+    A list all transactions for all campaigns, between FROM-DATE and TO-DATE.
+    Either the expenses of the campaign or the contributions of the
+    campaign, based on REPORT-TYPE.
+    '''
+    click.echo(
+        json.dumps(list(scraper.records_for_race(**kwargs))),
+        nl=False
+    )
+
 if __name__ == '__main__':
     cli()
