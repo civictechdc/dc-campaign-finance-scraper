@@ -14,6 +14,7 @@ setup(
         'click',
         'beautifulsoup4',
         'requests-cache',
+        'retrying',
     ],
 
     # metadata for upload to PyPI

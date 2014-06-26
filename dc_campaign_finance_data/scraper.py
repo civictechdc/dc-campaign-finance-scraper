@@ -2,27 +2,44 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import requests
-import requests.adapters
-import requests_cache.core
 import json
 import csv
 import functools
 import collections
+import retrying
+import percache
+import logging
+import requests_cache
+
 
 from bs4 import BeautifulSoup
 
 
-def retry_session(max_retries=20):
-    s = requests_cache.core.CachedSession(
-        expire_after=60 * 60 * 6,
-        allowable_methods=['GET', 'POST']
-    )
-    s = requests.Session()
-    s.mount('http', requests.adapters.HTTPAdapter(max_retries=max_retries))
-    return s
+requests_cache.install_cache()
+cache = percache.Cache("/tmp/python-dc-campaign-finance-data-scraper", livesync=True)
+cache = lambda _: _
+logging.basicConfig(level=logging.DEBUG)
+requests_cache.install_cache(allowable_methods=('GET', 'POST'), expire_after=60 * 60 * 24)
+
+# Wait 2^x * 1000 milliseconds between each retry, up to 10 seconds, then 10 seconds afterwards
+retry_exp_backoff = retrying.retry(
+    wait_exponential_multiplier=1000,
+    wait_exponential_max=10000
+)
 
 
-#@functools.lru_cache()
+def listify(f):
+    @functools.wraps(f)
+    def listify_helper(*args, **kwargs):
+        return list(f(*args, **kwargs))
+    return listify_helper
+
+
+class NoData(Exception):
+    pass
+
+
+@cache
 def records_csv(from_date, to_date, report_type):
     options = {
         "cboFilerType": "PCC",
@@ -35,7 +52,7 @@ def records_csv(from_date, to_date, report_type):
     }
     get_some_cookies_from_url = "http://www.ocf.dc.gov/serv/download.asp"
 
-    s = retry_session()
+    s = requests.Session()
     s.post(get_some_cookies_from_url, options).raise_for_status()
 
     download_url = 'http://www.ocf.dc.gov/serv/download_conexp.asp'
@@ -48,7 +65,7 @@ def records_csv(from_date, to_date, report_type):
     return r.text
 
 
-#@functools.lru_cache(maxsize=2**9)
+@cache
 def election_of_committee(committee, record_year):
     '''
     Returns the ofifce and election year, for a certain committee name.
@@ -61,7 +78,7 @@ def election_of_committee(committee, record_year):
     return election_of_committee(committee, record_year + 1)
 
 
-#@functools.lru_cache()
+@cache
 def records_with_offices_and_year(from_date, to_date, report_type):
     records = csv.DictReader(records_csv(from_date, to_date, report_type).splitlines())
 
@@ -75,31 +92,30 @@ def records_with_offices_and_year(from_date, to_date, report_type):
                 record["Committee Name"],
                 year_from_date(record["Date of Receipt"])
             )
-        except TypeError:
+        except NoData:
             office, election_year = None, None
 
         record["Office"] = office
-        record["Year"] = election_year
+        record["Election Year"] = election_year
     return records
 
 
-#@functools.lru_cache()
+@cache
 def records_for_race(office, year, report_type):
     '''
     All the records for races happening in a year
     '''
     all_records = records_with_offices_and_year('01/01/1990', '01/01/9999', report_type)
     return filter(
-        lambda record: record['Office'] == office and record['Year'] == year,
+        lambda record: record['Office'] == office and record['Election Year'] == year,
         all_records
     )
 
 
-#@functools.lru_cache()
+@cache
 def available_years():
     js_with_years_in_it = 'http://geospatial.dcgis.dc.gov/ocf/js/process.js'
-    s = retry_session()
-    r = s.get(js_with_years_in_it)
+    r = requests.get(js_with_years_in_it)
 
     years_line = r.text.splitlines()[3]
     # This line looks like like:
@@ -113,11 +129,10 @@ def available_years():
     return [int(year['year']) for year in years_json]
 
 
-#@functools.lru_cache()
+@cache
 def offices():
     html_with_offices_in_it = 'http://geospatial.dcgis.dc.gov/ocf/'
-    s = retry_session()
-    r = s.get(html_with_offices_in_it)
+    r = requests.get(html_with_offices_in_it)
     soup = BeautifulSoup(r.text)
 
     office_option_elements = soup.find(id='SearchByOffices')('option')
@@ -127,24 +142,28 @@ def offices():
     return [e.text for e in office_option_elements]
 
 
-#@functools.lru_cache()
+@cache
+@listify
 def races(year):
     for office in offices():
         if committees(office, year):
             yield office
 
 
-#@functools.lru_cache()
+@cache
 def _office_version(office):
-    html_with_offices_in_it = 'http://geospatial.dcgis.dc.gov/ocf/'
-    s = retry_session()
-    r = s.get(html_with_offices_in_it)
-    soup = BeautifulSoup(r.text)
+
+    def _get_html():
+        html_with_offices_in_it = 'http://geospatial.dcgis.dc.gov/ocf/'
+        return requests.get(html_with_offices_in_it).text
+
+    soup = BeautifulSoup(_get_html())
 
     return soup.find('option', text=office)['value']
 
 
-#@functools.lru_cache()
+@cache
+@listify
 def commitees_in_multiple_years():
     '''
     Checks to see if any committee name runs in elections in multiple years.
@@ -157,23 +176,25 @@ def commitees_in_multiple_years():
                 for year_test, office_test_dict in years_offices_committees.items():
                     for office_test, committee_test in office_test_dict.items():
                         if committee in committee_test:
-                            print(("commitee '{}' ran twice, in '{}' for '{}' and "
+                            yield(("commitee '{}' ran twice, in '{}' for '{}' and "
                                    "in '{}' running for '{}'").format(
                                 committee, year, office, year_test, office_test))
 
                 years_offices_committees[year][office].append(committee)
 
 
-#@functools.lru_cache(maxsize=2**9)
+@retry_exp_backoff
+@cache
 def committees(office, year):
+    if year not in available_years():
+        raise NoData("No data on {} for committees running".format(year))
     url = 'http://geospatial.dcgis.dc.gov/ocf/getData.aspx'
     payload = {
         'of': office,
         'ofv': _office_version(office),
         'yr': year,
     }
-    s = retry_session()
-    r = s.get(url, params=payload, timeout=99**99)
+    r = requests.get(url, params=payload)
     soup = BeautifulSoup(r.text)
 
     try:
