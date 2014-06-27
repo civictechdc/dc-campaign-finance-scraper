@@ -10,7 +10,7 @@ from . import utils
 
 @click.group()
 @click.option('--log/--no-log',
-              default=True,
+              default=False,
               help='Print log of all HTTP requests',
               show_default=True)
 @click.option('--cache/--no-cache',

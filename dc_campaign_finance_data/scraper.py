@@ -55,13 +55,12 @@ def election_of_committee(committee, record_year):
 
 @utils.log_function
 def records_with_offices_and_year(from_date, to_date, report_type):
-    records = csv.DictReader(records_csv(from_date, to_date, report_type).splitlines())
+    records = list(map(dict, csv.DictReader(records_csv(from_date, to_date, report_type).splitlines())))
 
     def year_from_date(date):
         return int(date.split('/')[-1])
 
     for record in records:
-        print(record)
         try:
             office, election_year = election_of_committee(
                 record["Committee Name"],
@@ -80,7 +79,7 @@ def records_for_race(office, year, report_type):
     '''
     All the records for races happening in a year
     '''
-    all_records = records_with_offices_and_year('01/01/1990', '01/01/9999', report_type)
+    all_records = records_with_offices_and_year('01/01/1999', '01/01/9999', report_type)
     return filter(
         lambda record: record['Office'] == office and record['Election Year'] == year,
         all_records
