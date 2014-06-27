@@ -5,11 +5,23 @@ import json
 import datetime
 
 from . import scraper
+from . import utils
 
 
 @click.group()
-def cli(**kwargs):
-    pass
+@click.option('--log/--no-log',
+              default=True,
+              help='Print log of all HTTP requests',
+              show_default=True)
+@click.option('--cache/--no-cache',
+              default=True,
+              help='Cache all requests to file.',
+              show_default=True)
+def cli(log, cache):
+    if log:
+        utils.enable_logging()
+    if cache:
+        utils.enable_cache()
 
 
 @cli.command(short_help='List of records (CSV)')

@@ -1,45 +1,19 @@
-from __future__ import unicode_literals
-from __future__ import print_function
-
 import requests
 import json
 import csv
-import functools
 import collections
-import retrying
-import percache
-import logging
-import requests_cache
-
+import functools
 
 from bs4 import BeautifulSoup
 
-
-requests_cache.install_cache()
-cache = percache.Cache("/tmp/python-dc-campaign-finance-data-scraper", livesync=True)
-cache = lambda _: _
-logging.basicConfig(level=logging.DEBUG)
-requests_cache.install_cache(allowable_methods=('GET', 'POST'), expire_after=60 * 60 * 24)
-
-# Wait 2^x * 1000 milliseconds between each retry, up to 10 seconds, then 10 seconds afterwards
-retry_exp_backoff = retrying.retry(
-    wait_exponential_multiplier=1000,
-    wait_exponential_max=10000
-)
-
-
-def listify(f):
-    @functools.wraps(f)
-    def listify_helper(*args, **kwargs):
-        return list(f(*args, **kwargs))
-    return listify_helper
+from . import utils
 
 
 class NoData(Exception):
     pass
 
 
-@cache
+@utils.log_function
 def records_csv(from_date, to_date, report_type):
     options = {
         "cboFilerType": "PCC",
@@ -65,7 +39,8 @@ def records_csv(from_date, to_date, report_type):
     return r.text
 
 
-@cache
+@utils.log_function
+@functools.lru_cache(maxsize=2**12)
 def election_of_committee(committee, record_year):
     '''
     Returns the ofifce and election year, for a certain committee name.
@@ -78,7 +53,7 @@ def election_of_committee(committee, record_year):
     return election_of_committee(committee, record_year + 1)
 
 
-@cache
+@utils.log_function
 def records_with_offices_and_year(from_date, to_date, report_type):
     records = csv.DictReader(records_csv(from_date, to_date, report_type).splitlines())
 
@@ -100,7 +75,7 @@ def records_with_offices_and_year(from_date, to_date, report_type):
     return records
 
 
-@cache
+@utils.log_function
 def records_for_race(office, year, report_type):
     '''
     All the records for races happening in a year
@@ -112,7 +87,7 @@ def records_for_race(office, year, report_type):
     )
 
 
-@cache
+@utils.log_function
 def available_years():
     js_with_years_in_it = 'http://geospatial.dcgis.dc.gov/ocf/js/process.js'
     r = requests.get(js_with_years_in_it)
@@ -129,7 +104,8 @@ def available_years():
     return [int(year['year']) for year in years_json]
 
 
-@cache
+@utils.log_function
+@functools.lru_cache()
 def offices():
     html_with_offices_in_it = 'http://geospatial.dcgis.dc.gov/ocf/'
     r = requests.get(html_with_offices_in_it)
@@ -142,15 +118,17 @@ def offices():
     return [e.text for e in office_option_elements]
 
 
-@cache
-@listify
+@utils.log_function
+@functools.lru_cache()
 def races(year):
     for office in offices():
         if committees(office, year):
             yield office
 
 
-@cache
+@utils.log_function
+@functools.lru_cache()
+@utils.retry_exp_backoff
 def _office_version(office):
 
     def _get_html():
@@ -162,8 +140,7 @@ def _office_version(office):
     return soup.find('option', text=office)['value']
 
 
-@cache
-@listify
+@utils.log_function
 def commitees_in_multiple_years():
     '''
     Checks to see if any committee name runs in elections in multiple years.
@@ -183,8 +160,9 @@ def commitees_in_multiple_years():
                 years_offices_committees[year][office].append(committee)
 
 
-@retry_exp_backoff
-@cache
+@utils.log_function
+@functools.lru_cache(maxsize=2**9)
+@utils.retry_exp_backoff
 def committees(office, year):
     if year not in available_years():
         raise NoData("No data on {} for committees running".format(year))
