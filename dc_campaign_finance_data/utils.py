@@ -2,6 +2,7 @@ import logging
 import functools
 import retrying
 import requests_cache
+import requests.exceptions
 
 
 def enable_logging():
@@ -18,7 +19,8 @@ def listify(f):
 # Wait 2^x * 1000 milliseconds between each retry, up to 10 seconds, then 10 seconds afterwards
 retry_exp_backoff = retrying.retry(
     wait_exponential_multiplier=1000,
-    wait_exponential_max=10000
+    wait_exponential_max=10000,
+    retry_on_exception=lambda exception: isinstance(exception, requests.exceptions.ConnectionError)
 )
 
 
@@ -44,7 +46,7 @@ def log_function(f):
         try:
             return_output = f(*args, **kwds)
         except Exception:
-            pass
+            raise
         else:
             return return_output
         finally:
