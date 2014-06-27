@@ -14,8 +14,18 @@ class NoData(Exception):
 
 
 @utils.log_function
+@functools.lru_cache(maxsize=2**12)
+def _records_cookies(options):
+    r = requests.post("http://www.ocf.dc.gov/serv/download.asp", options)
+    r.raise_for_status()
+    return r.cookies
+
+
+@utils.log_function
 def records_csv(from_date, to_date, report_type):
-    options = {
+    # we should sort these so that they are sent in the same order every
+    # time and cached correctly
+    options = tuple(sorted({
         "cboFilerType": "PCC",
         "txtFromDate": from_date,
         "txtToDate": to_date,
@@ -23,18 +33,14 @@ def records_csv(from_date, to_date, report_type):
         "cboSort1": "agyname, ",
         "filing_year": "",
         "optFormat": "CSV",
-    }
-    get_some_cookies_from_url = "http://www.ocf.dc.gov/serv/download.asp"
-
-    s = requests.Session()
-    s.post(get_some_cookies_from_url, options).raise_for_status()
+    }.items()))
 
     download_url = 'http://www.ocf.dc.gov/serv/download_conexp.asp'
-    r = s.post(download_url, options)
+    r = requests.post(download_url, options, cookies=_records_cookies(options))
     r.raise_for_status()
 
     if 'Your Session is expired. Please try again' in r.text:
-        raise(Exception, 'Cant get records data. Cookie isnt working. idk')
+        raise(Exception, 'Cant get records data. Cookie isnt working. Says session expire')
 
     return r.text
 
