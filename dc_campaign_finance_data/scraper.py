@@ -88,6 +88,7 @@ def records_for_race(office, year, report_type):
 
 
 @utils.log_function
+@functools.lru_cache()
 def available_years():
     js_with_years_in_it = 'http://geospatial.dcgis.dc.gov/ocf/js/process.js'
     r = requests.get(js_with_years_in_it)
