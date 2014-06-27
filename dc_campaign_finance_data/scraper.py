@@ -14,7 +14,6 @@ class NoData(Exception):
 
 
 @utils.log_function
-@functools.lru_cache(maxsize=2**12)
 def _records_cookies(options):
     r = requests.post("http://www.ocf.dc.gov/serv/download.asp", options)
     r.raise_for_status()
@@ -46,16 +45,19 @@ def records_csv(from_date, to_date, report_type):
 
 
 @utils.log_function
-@functools.lru_cache(maxsize=2**12)
+@functools.lru_cache(maxsize=2**9)
 def election_of_committee(committee, record_year):
     '''
     Returns the ofifce and election year, for a certain committee name.
     It starts by looking at all the elections in that year, to see if
     that committee name was running for anything.
     '''
-    for possible_office in races(record_year):
-        if committee in committees(possible_office, record_year):
-            return possible_office, record_year
+    try:
+        for possible_office in races(record_year):
+            if committee in committees(possible_office, record_year):
+                return possible_office, record_year
+    except NoData:
+        return None, None
     return election_of_committee(committee, record_year + 1)
 
 
@@ -67,13 +69,10 @@ def records_with_offices_and_year(from_date, to_date, report_type):
         return int(date.split('/')[-1])
 
     for record in records:
-        try:
-            office, election_year = election_of_committee(
-                record["Committee Name"],
-                year_from_date(record["Date of Receipt"])
-            )
-        except NoData:
-            office, election_year = None, None
+        office, election_year = election_of_committee(
+            record["Committee Name"],
+            year_from_date(record["Date of Receipt"])
+        )
 
         record["Office"] = office
         record["Election Year"] = election_year
