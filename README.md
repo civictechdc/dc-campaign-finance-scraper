@@ -9,13 +9,19 @@ $ dc-campaign-finance-data
 Usage: dc-campaign-finance-data [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  --help  Show this message and exit.
+  --log / --no-log      Print log of all HTTP requests  [default: False]
+  --cache / --no-cache  Cache all requests to file.  [default: True]
+  --help                Show this message and exit.
 
 Commands:
-  committees  Running committees (JSON)
-  offices     Possible offices (JSON)
-  records     List of records (CSV)
-  years       Possible years (JSON)
+  committees      Running committees (JSON)
+  committees_dup  Checks to see if any committees are duplicated in multiple
+                  race
+  offices         Possible offices (JSON)
+  races           Active races in a year (JSON)
+  records         List of records (CSV)
+  records_json    List of records by race and year (JSON)
+  years           Possible years (JSON)
 $ dc-campaign-finance-data offices
 ["Mayor", "Council Chairman", "Council At-Large", "Council Ward 1", ... ]
 $ dc-campaign-finance-data years
@@ -49,6 +55,43 @@ Options:
 $ dc-campaign-finance-data records
 "Committee Name","Candidate Name","Contributor","Address","city","state","Zip","Contributor Type","Contribution Type","Employer Name","Employer Address","Amount","Date of Receipt"
 "AJ Cooper at large","A.J  Cooper ","Cooper, A.J ","1212 Delafield Pl., NW","Washington","DC","20011","Candidate","Check","","","$2,000.00","1/24/2014"
+$ dc-campaign-finance-data records_json --help
+Usage: dc-campaign-finance-data records_json [OPTIONS]
+
+  A list all transactions for all campaigns running for OFFICE in YEAR.
+  Either the expenses of the campaign or the contributions of the campaign,
+  based on REPORT-TYPE.
+
+Options:
+  --office [Mayor|Council Chairman|Council At-Large|Council Ward 1|Council Ward 2|Council Ward 3|Council Ward 4|Council Ward 5|Council Ward 6|Council Ward 7|Council Ward 8|US Representative|Democratic National Committeeman|Democratic National Committeewoman|Alternate Democratic National Committeeman|Alternate Democratic National Committeewoman|At-Large DC Democratic State Committee|Ward 1 DC Democratic State Committee |Ward 2 DC Democratic State Committee|Ward 3 DC Democratic State Committee|Ward 4 DC Democratic State Committee|Ward 5 DC Democratic State Committee|Ward 6 DC Democratic State Committee|Ward 7 DC Democratic State Committee|Ward 8 DC Democratic State Committee|Democratic Delegates|Democratic Delegates Alternates|Republican Delegates|Republican Delegates Alternates|Republican National Committeeman
+|Republican National Committeewoman|At-Large DC Republican Committee Official|Ward 1 of the DC Republican Committee|Ward 2 of the DC Republican Committee|Ward 3 of the DC Republican Committee|Ward 4 of the DC Republican Committee|Ward 5 of the DC Republican Committee|Ward 6 of the DC Republican Committee|Ward 7 of the DC Republican Committee|Ward 8 of the DC Republican Committee|Other Political Party|Non Supporting|Supporting|US Senator|School Board Ward 1|School Board Ward 2|School Board Ward 3|School Board Ward 4|School Board Ward 5|School Board Ward 6|School Board Ward 7|School Board Ward 8|School Board At-Large]
+                                  [default: Council At-Large]
+  --year INTEGER RANGE            [default: 2014]
+  --report-type [exp|con]         exp -> expenses, con -> contributions
+                                  [default: con]
+  --help                          Show this message and exit.
+$  dc-campaign-finance-data records_json  | jq '.[0]'
+{
+  "Contributor": "Brannum, Robert",
+  "Office": "Council At-Large",
+  "Candidate Name": "Anita Bonds ",
+  "Amount": "$50.00",
+  "Committee Name": "Bonds for Council 2014",
+  "Election Year": 2014,
+  "Address": "158 Adams St NW",
+  "state": "DC",
+  "Contribution Type": "Check",
+  "Date of Receipt": "1/18/2014",
+  "Employer Name": "retired",
+  "Contributor Type": "Individual",
+  "city": "Washington",
+  "Employer Address": "",
+  "Zip": "20001"
+}
+$ dc-campaign-finance-data committees_dup
+commitee 'Friends of Calvin Gurley' ran twice, in '2012' for 'Council Ward 4' and in '2010' running for 'Council Chairman'
+commitee 'The Rent is Too Darn High' ran twice, in '2014' for 'At-Large DC Democratic State Committee' and in '2014' running for 'Democratic National Committeeman'
+commitee 'Committee to Elect David Schwartzman' ran twice, in '2014' for 'US Senator' and in '2010' running for 'Council At-Large'
 ...
 ```
 

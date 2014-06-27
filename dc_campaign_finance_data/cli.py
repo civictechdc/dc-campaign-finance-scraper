@@ -135,20 +135,7 @@ def records_json(**kwargs):
 
 
 @cli.command(short_help='Checks to see if any committees are duplicated in multiple race')
-@click.option('--office',
-              default='Council At-Large',
-              show_default=True,
-              type=click.Choice(scraper.offices()))
-@click.option('--year',
-              default=datetime.datetime.now().year,
-              show_default=True,
-              type=click.IntRange(*year_range))
-@click.option('--report-type',
-              default='con',
-              help='exp -> expenses, con -> contributions',
-              type=click.Choice(['exp', 'con']),
-              show_default=True)
-def committees_dup(**kwargs):
+def committees_dup():
     '''
     Logs and committee names that show up running for more than one office.
     This means these are problematic, because we have to infer what records
