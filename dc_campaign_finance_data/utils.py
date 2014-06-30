@@ -49,12 +49,13 @@ def log_function(f):
         indent_level += 1
         try:
             return_output = f(*args, **kwds)
-        except Exception:
+        except Exception as e:
+            _log_with_level('->Raised {}'.format(f.__name__, repr(e)))
             raise
         else:
+            _log_with_level('->{}'.format(f.__name__, repr(return_output)[0:50]))
             return return_output
         finally:
             indent_level -= 1
-            _log_with_level('{}->'.format(f.__name__))
 
     return wrapper
