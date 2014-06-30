@@ -17,12 +17,15 @@ def listify(f):
 
 
 def retry_exp_backoff(f):
-    # Wait 2^x * 1000 milliseconds between each retry, up to 10 seconds, then 10 seconds afterwards
-    return functools.wraps(f)(retrying.retry(
-        wait_exponential_multiplier=1000,
-        wait_exponential_max=10000,
-        retry_on_exception=lambda exception: isinstance(exception, requests.exceptions.ConnectionError)
-    ))
+    @functools.wraps(f)
+    def retry_exp_backoff_helper(*args, **kwargs):
+        # Wait 2^x * 1000 milliseconds between each retry, up to 10 seconds, then 10 seconds afterwards
+        return retrying.Retrying(
+            wait_exponential_multiplier=1000,
+            wait_exponential_max=10000,
+            retry_on_exception=lambda exception: isinstance(exception, requests.exceptions.ConnectionError)
+        ).call(f, *args, **kwargs)
+    return retry_exp_backoff_helper
 
 
 def enable_cache():
