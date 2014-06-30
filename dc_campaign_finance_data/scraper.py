@@ -66,6 +66,7 @@ def election_of_committee(committee, record_year):
 
 
 @utils.log_function
+@utils.listify
 def records_for_race(office, election_year, report_type):
     '''
     All the records for races happening in a year.
@@ -130,6 +131,7 @@ def offices():
 
 @utils.log_function
 @functools.lru_cache()
+@utils.listify
 def races(year):
     for office in offices():
         if committees(office, year):
