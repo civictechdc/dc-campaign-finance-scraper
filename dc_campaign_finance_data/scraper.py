@@ -3,6 +3,7 @@ import json
 import csv
 import collections
 import functools
+import logging
 
 from bs4 import BeautifulSoup
 
@@ -11,6 +12,9 @@ from . import utils
 
 class NoData(Exception):
     pass
+
+
+logger = logging.getLogger(__name__)
 
 
 @utils.log_function
@@ -62,33 +66,34 @@ def election_of_committee(committee, record_year):
 
 
 @utils.log_function
-def records_with_offices_and_year(from_date, to_date, report_type):
-    records = list(map(dict, csv.DictReader(records_csv(from_date, to_date, report_type).splitlines())))
+def records_for_race(office, election_year, report_type):
+    '''
+    All the records for races happening in a year.
+    It needs to get all of the records first, because no matter when a record
+    was recorded, the election year could be a different year. So if you want
+    say records for Mayor in 2014, those donations could be from, technically
+    any year. And because I don't feel like estimating how long before and
+    after the election those donations should be from.
+    '''
+    from_date = '01/01/1999'
+    to_date = '01/01/9999'
+
+    records = csv.DictReader(records_csv(from_date, to_date, report_type).splitlines())
 
     def year_from_date(date):
         return int(date.split('/')[-1])
 
     for record in records:
-        office, election_year = election_of_committee(
-            record["Committee Name"],
-            year_from_date(record["Date of Receipt"])
-        )
-
-        record["Office"] = office
-        record["Election Year"] = election_year
-    return records
-
-
-@utils.log_function
-def records_for_race(office, year, report_type):
-    '''
-    All the records for races happening in a year
-    '''
-    all_records = records_with_offices_and_year('01/01/1999', '01/01/9999', report_type)
-    return filter(
-        lambda record: record['Office'] == office and record['Election Year'] == year,
-        all_records
-    )
+        # Find the record commitee name and year, so that we can make a guess
+        # at what the office and eleciton year the record is from
+        record_committee = record["Committee Name"]
+        record_submitted_year = year_from_date(record["Date of Receipt"])
+        record_office, record_election_year = election_of_committee(record_committee, record_submitted_year)
+        logger.debug(record_office)
+        logger.debug(record_election_year)
+        # if that is the office and record year we want, then we want that record!
+        if record_office == office and record_election_year == election_year:
+            yield record
 
 
 @utils.log_function

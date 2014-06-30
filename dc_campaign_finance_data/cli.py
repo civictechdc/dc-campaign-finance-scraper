@@ -113,7 +113,7 @@ def races(**kwargs):
               default='Council At-Large',
               show_default=True,
               type=click.Choice(scraper.offices()))
-@click.option('--year',
+@click.option('--election-year',
               default=datetime.datetime.now().year,
               show_default=True,
               type=click.IntRange(*year_range))
