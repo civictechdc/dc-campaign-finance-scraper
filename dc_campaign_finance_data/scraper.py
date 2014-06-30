@@ -90,8 +90,6 @@ def records_for_race(office, election_year, report_type):
         record_committee = record["Committee Name"]
         record_submitted_year = year_from_date(record["Date of Receipt"])
         record_office, record_election_year = election_of_committee(record_committee, record_submitted_year)
-        logger.debug(record_office)
-        logger.debug(record_election_year)
         # if that is the office and record year we want, then we want that record!
         if record_office == office and record_election_year == election_year:
             yield record
