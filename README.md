@@ -19,7 +19,7 @@ Commands:
                   race
   offices         Possible offices (JSON)
   races           Active races in a year (JSON)
-  records         List of records (CSV)
+  records_csv     List of records (CSV)
   records_json    List of records by race and year (JSON)
   years           Possible years (JSON)
 $ dc-campaign-finance-scraper offices
