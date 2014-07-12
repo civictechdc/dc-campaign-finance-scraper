@@ -28,8 +28,8 @@ def retry_exp_backoff(f):
     return retry_exp_backoff_helper
 
 
-def enable_cache():
-    requests_cache.install_cache(allowable_methods=('GET', 'POST'), expire_after=60 * 60 * 24)
+def enable_cache(backend='sqlite', **kwargs):
+    requests_cache.install_cache(allowable_methods=('GET', 'POST'), expire_after=60 * 60 * 24, backend=backend, **kwargs)
 
 indent_level = 0
 
