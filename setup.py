@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="dc-campaign-finance-data",
+    name="dc-campaign-finance-scraper",
     version="0.4.2",
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'dc-campaign-finance-data=dc_campaign_finance_data.cli:cli'
+            'dc-campaign-finance-scraper=dc_campaign_finance_scraper.cli:cli'
         ]
     },
     install_requires=[
@@ -22,6 +22,5 @@ setup(
     author="Saul Shanabrook",
     author_email="s.shanabrook@gmail.com",
     description="Provides data from http://www.ocf.dc.gov/serv/download.asp in a nicer way",
-    keywords="finance DC campaign elissa",
-    url="http://github.com/techforelissa/finance-scraper",
+    url="http://github.com/codefordc/dc-campaign-finance-scraper",
 )

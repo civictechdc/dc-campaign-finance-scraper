@@ -1,12 +1,12 @@
-# finance-scraper
+# dc-campaign-finance-scraper
 
 ## Instructions
 ```bash
-$ pip install dc-campaign-finance-data
-Downloading/unpacking dc-campaign-finance-data
+$ pip install dc-campaign-finance-scraper
+Downloading/unpacking dc-campaign-finance-scraper
 ...
-$ dc-campaign-finance-data
-Usage: dc-campaign-finance-data [OPTIONS] COMMAND [ARGS]...
+$ dc-campaign-finance-scraper
+Usage: dc-campaign-finance-scraper [OPTIONS] COMMAND [ARGS]...
 
 Options:
   --log / --no-log      Print log of all HTTP requests  [default: False]
@@ -22,12 +22,12 @@ Commands:
   records         List of records (CSV)
   records_json    List of records by race and year (JSON)
   years           Possible years (JSON)
-$ dc-campaign-finance-data offices
+$ dc-campaign-finance-scraper offices
 ["Mayor", "Council Chairman", "Council At-Large", "Council Ward 1", ... ]
-$ dc-campaign-finance-data years
+$ dc-campaign-finance-scraper years
 [2010, 2011, 2012, 2013, 2014]⏎
-$ dc-campaign-finance-data committees --help
-Usage: dc-campaign-finance-data committees [OPTIONS]
+$ dc-campaign-finance-scraper committees --help
+Usage: dc-campaign-finance-scraper committees [OPTIONS]
 
   All committees running for OFFICE in YEAR.
 
@@ -36,10 +36,10 @@ Options:
                                   [default: Council At-Large]
   --year INTEGER RANGE            [default: 2014]
   --help                          Show this message and exit.
-$ dc-campaign-finance-data committees
+$ dc-campaign-finance-scraper committees
 ["Bonds for Council 2014", "Brian Hart for DC", ...]⏎
-$ dc-campaign-finance-data records --help
-Usage: dc-campaign-finance-data records [OPTIONS]
+$ dc-campaign-finance-scraper records --help
+Usage: dc-campaign-finance-scraper records [OPTIONS]
 
   A list all transactions for all campaigns, between FROM-DATE and TO-DATE.
   Either the expenses of the campaign or the contributions of the campaign,
@@ -52,11 +52,11 @@ Options:
   --report-type [exp|con]  The type of report. (exp -> expenses, con ->
                            contributions)  [default: con]
   --help                   Show this message and exit.
-$ dc-campaign-finance-data records
+$ dc-campaign-finance-scraper records
 "Committee Name","Candidate Name","Contributor","Address","city","state","Zip","Contributor Type","Contribution Type","Employer Name","Employer Address","Amount","Date of Receipt"
 "AJ Cooper at large","A.J  Cooper ","Cooper, A.J ","1212 Delafield Pl., NW","Washington","DC","20011","Candidate","Check","","","$2,000.00","1/24/2014"
-$ dc-campaign-finance-data records_json --help
-Usage: dc-campaign-finance-data records_json [OPTIONS]
+$ dc-campaign-finance-scraper records_json --help
+Usage: dc-campaign-finance-scraper records_json [OPTIONS]
 
   A list all transactions for all campaigns running for OFFICE in YEAR.
   Either the expenses of the campaign or the contributions of the campaign,
@@ -70,7 +70,7 @@ Options:
   --report-type [exp|con]         exp -> expenses, con -> contributions
                                   [default: con]
   --help                          Show this message and exit.
-$  dc-campaign-finance-data records_json  | jq '.[0]'
+$  dc-campaign-finance-scraper records_json  | jq '.[0]'
 {
   "Contributor": "Brannum, Robert",
   "Office": "Council At-Large",
@@ -88,7 +88,7 @@ $  dc-campaign-finance-data records_json  | jq '.[0]'
   "Employer Address": "",
   "Zip": "20001"
 }
-$ dc-campaign-finance-data committees_dup
+$ dc-campaign-finance-scraper committees_dup
 commitee 'Friends of Calvin Gurley' ran twice, in '2012' for 'Council Ward 4' and in '2010' running for 'Council Chairman'
 commitee 'The Rent is Too Darn High' ran twice, in '2014' for 'At-Large DC Democratic State Committee' and in '2014' running for 'Democratic National Committeeman'
 commitee 'Committee to Elect David Schwartzman' ran twice, in '2014' for 'US Senator' and in '2010' running for 'Council At-Large'
