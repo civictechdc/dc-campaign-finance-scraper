@@ -1,6 +1,7 @@
 import logging
 import functools
 import retrying
+import tablib
 import requests_cache
 import requests.exceptions
 
@@ -59,3 +60,7 @@ def log_function(f):
             indent_level -= 1
 
     return wrapper
+
+
+def year_from_date(date):
+    return int(date.split('/')[-1])

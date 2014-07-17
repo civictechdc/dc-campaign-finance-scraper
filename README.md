@@ -1,99 +1,99 @@
 # dc-campaign-finance-scraper
 
-## Instructions
+## Install
 ```bash
 $ pip install dc-campaign-finance-scraper
 Downloading/unpacking dc-campaign-finance-scraper
 ...
-$ dc-campaign-finance-scraper
+```
+
+## CLI Usage
+
+The easiest way to get data out from the scraper is to use the CLI. Once you
+it installed, you should be able to run the `dc-campaign-finance-scraper`
+command
+
+```bash
+$ dc-campaign-finance-scraper --help
 Usage: dc-campaign-finance-scraper [OPTIONS] COMMAND [ARGS]...
 
 Options:
   --log / --no-log      Print log of all HTTP requests  [default: False]
-  --cache / --no-cache  Cache all requests to file.  [default: True]
+  --cache / --no-cache  Cache all requests to file.  [default: False]
   --help                Show this message and exit.
 
 Commands:
-  committees      Running committees (JSON)
   committees_dup  Checks to see if any committees are duplicated in multiple
                   race
-  offices         Possible offices (JSON)
-  races           Active races in a year (JSON)
-  records         List of records (CSV)
-  records_json    List of records by race and year (JSON)
-  years           Possible years (JSON)
-$ dc-campaign-finance-scraper offices
-["Mayor", "Council Chairman", "Council At-Large", "Council Ward 1", ... ]
-$ dc-campaign-finance-scraper years
-[2010, 2011, 2012, 2013, 2014]⏎
-$ dc-campaign-finance-scraper committees --help
-Usage: dc-campaign-finance-scraper committees [OPTIONS]
+  records         List of records
+```
 
-  All committees running for OFFICE in YEAR.
+To get a list of records of all contributions or expenditures, use the `records`
+subcommand.
 
-Options:
-  --office [Mayor|Council Chairman...
-                                  [default: Council At-Large]
-  --year INTEGER RANGE            [default: 2014]
-  --help                          Show this message and exit.
-$ dc-campaign-finance-scraper committees
-["Bonds for Council 2014", "Brian Hart for DC", ...]⏎
-$ dc-campaign-finance-scraper records --help
-Usage: dc-campaign-finance-scraper records [OPTIONS]
+```bash
+$ Usage: dc-campaign-finance-scraper records [OPTIONS]
 
   A list all transactions for all campaigns, between FROM-DATE and TO-DATE.
+
+  Also, if specified, only those for the elction in ELECTION-YEAR and
+  running for the office OFFICE.
+
   Either the expenses of the campaign or the contributions of the campaign,
   based on REPORT-TYPE.
 
 Options:
-  --from-date TEXT         First date of records.  [default: 01/01/2014]
-  --to-date TEXT           Last date of records. Future dates are allowed.
-                           [default: 01/01/9999]
-  --report-type [exp|con]  The type of report. (exp -> expenses, con ->
-                           contributions)  [default: con]
-  --help                   Show this message and exit.
-$ dc-campaign-finance-scraper records
-"Committee Name","Candidate Name","Contributor","Address","city","state","Zip","Contributor Type","Contribution Type","Employer Name","Employer Address","Amount","Date of Receipt"
-"AJ Cooper at large","A.J  Cooper ","Cooper, A.J ","1212 Delafield Pl., NW","Washington","DC","20011","Candidate","Check","","","$2,000.00","1/24/2014"
-$ dc-campaign-finance-scraper records_json --help
-Usage: dc-campaign-finance-scraper records_json [OPTIONS]
-
-  A list all transactions for all campaigns running for OFFICE in YEAR.
-  Either the expenses of the campaign or the contributions of the campaign,
-  based on REPORT-TYPE.
-
-Options:
-  --office [Mayor|Council Chairman|Council At-Large|Council Ward 1|Council Ward 2|Council Ward 3|Council Ward 4|Council Ward 5|Council Ward 6|Council Ward 7|Council Ward 8|US Representative|Democratic National Committeeman|Democratic National Committeewoman|Alternate Democratic National Committeeman|Alternate Democratic National Committeewoman|At-Large DC Democratic State Committee|Ward 1 DC Democratic State Committee |Ward 2 DC Democratic State Committee|Ward 3 DC Democratic State Committee|Ward 4 DC Democratic State Committee|Ward 5 DC Democratic State Committee|Ward 6 DC Democratic State Committee|Ward 7 DC Democratic State Committee|Ward 8 DC Democratic State Committee|Democratic Delegates|Democratic Delegates Alternates|Republican Delegates|Republican Delegates Alternates|Republican National Committeeman
-|Republican National Committeewoman|At-Large DC Republican Committee Official|Ward 1 of the DC Republican Committee|Ward 2 of the DC Republican Committee|Ward 3 of the DC Republican Committee|Ward 4 of the DC Republican Committee|Ward 5 of the DC Republican Committee|Ward 6 of the DC Republican Committee|Ward 7 of the DC Republican Committee|Ward 8 of the DC Republican Committee|Other Political Party|Non Supporting|Supporting|US Senator|School Board Ward 1|School Board Ward 2|School Board Ward 3|School Board Ward 4|School Board Ward 5|School Board Ward 6|School Board Ward 7|School Board Ward 8|School Board At-Large]
-                                  [default: Council At-Large]
-  --year INTEGER RANGE            [default: 2014]
+  --office [Mayor|Council Chairman|Council At-Large|Council Ward 1|Council Ward 2|Council Ward 3|Council Ward 4|Council Ward 5|Council Ward 6|Council Ward 7|Council Ward 8|US Representative|Democratic National Committeeman|Democratic National Committeewoman|Alternate Democratic National Committeeman|Alternate Democratic National Committeewoman|At-Large DC Democratic State Committee|Ward 1 DC Democratic State Committee |Ward 2 DC Democratic State Committee|Ward 3 DC Democratic State Committee|Ward 4 DC Democratic State Committee|Ward 5 DC Democratic State Committee|Ward 6 DC Democratic State Committee|Ward 7 DC Democratic State Committee|Ward 8 DC Democratic State Committee|Democratic Delegates|Democratic Delegates Alternates|Republican Delegates|Republican Delegates Alternates|Republican National Committeeman|Republican National Committeewoman|At-Large DC Republican Committee Official|Ward 1 of the DC Republican Committee|Ward 2 of the DC Republican Committee|Ward 3 of the DC Republican Committee|Ward 4 of the DC Republican Committee|Ward 5 of the DC Republican Committee|Ward 6 of the DC Republican Committee|Ward 7 of the DC Republican Committee|Ward 8 of the DC Republican Committee|Other Political Party|Non Supporting|Supporting|US Senator|School Board Ward 1|School Board Ward 2|School Board Ward 3|School Board Ward 4|School Board Ward 5|School Board Ward 6|School Board Ward 7|School Board Ward 8|School Board At-Large|Attorney General]
+  --election-year INTEGER RANGE
   --report-type [exp|con]         exp -> expenses, con -> contributions
                                   [default: con]
+  --from-date TEXT                First date of records.  [default:
+                                  01/01/1999]
+  --to-date TEXT                  Last date of records. Future dates are
+                                  allowed.  [default: 01/01/9999]
+  --format [json|xls|yaml|csv|tsv|html|xlsx|ods]
+                                  Format of out output.
   --help                          Show this message and exit.
-$  dc-campaign-finance-scraper records_json  | jq '.[0]'
-{
-  "Contributor": "Brannum, Robert",
-  "Office": "Council At-Large",
-  "Candidate Name": "Anita Bonds ",
-  "Amount": "$50.00",
-  "Committee Name": "Bonds for Council 2014",
-  "Election Year": 2014,
-  "Address": "158 Adams St NW",
-  "state": "DC",
-  "Contribution Type": "Check",
-  "Date of Receipt": "1/18/2014",
-  "Employer Name": "retired",
-  "Contributor Type": "Individual",
-  "city": "Washington",
-  "Employer Address": "",
-  "Zip": "20001"
-}
-$ dc-campaign-finance-scraper committees_dup
-commitee 'Friends of Calvin Gurley' ran twice, in '2012' for 'Council Ward 4' and in '2010' running for 'Council Chairman'
-commitee 'The Rent is Too Darn High' ran twice, in '2014' for 'At-Large DC Democratic State Committee' and in '2014' running for 'Democratic National Committeeman'
-commitee 'Committee to Elect David Schwartzman' ran twice, in '2014' for 'US Senator' and in '2010' running for 'Council At-Large'
+```
+Although the `records` command can be run without any arguments, this
+will return every record in the system, and will take a long time.
+
+If you don't specify a `format` it will default to a text based table
+like output.
+
+However, for something more interesting, let's try finding all the mayoral
+donation in 2014, for the election in 2014.
+
+```bash
+$ dc-campaign-finance-scraper records --office Mayor --election-year 2014 --from-date 01/01/2014 --to-date 01/01/2015
+Committee Name                            |Candidate Name |Contributor                                  |Address                                 |city                        |state|Zip  |Contributor Type       |Contribution Type|Employer Name                                     |Employer Address                                                 |Amount     |Date of Receipt|Office|Election Year
+------------------------------------------|---------------|---------------------------------------------|----------------------------------------|----------------------------|-----|-----|-----------------------|-----------------|--------------------------------------------------|-----------------------------------------------------------------|-----------|---------------|------|-------------
+Bruce Majors, Libertarian for Mayor       |Bruce Majors   |Rufer, Chris                                 |724 Main                                |Woodland                    |CA   |95695|Individual             |Check            |Retired                                           | CA                                                              |$2,000.00  |3/3/2014       |Mayor |2014
+Bruce Majors, Libertarian for Mayor       |Bruce Majors   |Majors, Mary                                 |11 Redbud                               |Shelbyville                 |TN   |37160|Individual             |Check            |Retired                                           | TN                                                              |$300.00    |2/27/2014      |Mayor |2014
+Bruce Majors, Libertarian for Mayor       |Bruce Majors   |Majors, Bruce                                |1200 23rd Street, NW. #711              |Washington                  |DC   |20037|Candidate              |Check            |                                                  |                                                                 |$1,500.00  |3/1/2014       |Mayor |2014
+Bruce Majors, Libertarian for Mayor       |Bruce Majors   |Snead, Edward                                |111 redbud                              |Georgetown                  |TX   |67676|Individual             |Check            |                                                  |                                                                 |$1,000.00  |4/8/2014       |Mayor |2014
+Bruce Majors, Libertarian for Mayor       |Bruce Majors   |Delhomme, Laura                              |1515 North Couthouse                    |Arlington                   |VA   |22203|Individual             |Check            |CKI                                               | 1515 North Couthouse, VA 22201                                  |$150.00    |6/7/2014       |Mayor |2014
+Bruce Majors, Libertarian for Mayor       |Bruce Majors   |Palmer, Tom                                  |1735                                    |17th Street NW              |DC   |20009|Individual             |CASH             |Atlas Foundation                                  | 1201 L Street NW, Washington, DC 20005                          |$25.00     |6/8/2014       |Mayor |2014
+Bruce Majors, Libertarian for Mayor       |Bruce Majors   |Majors, Bruce                                |1200 23rd Street, NW. #711              |Washington                  |DC   |20037|Candidate              |Check            |                                                  |                                                                 |$500.00    |6/1/2014       |Mayor |2014
+Carlos Allen For Mayor                    |Carlos Allen   |Sewell, Anthony                              |507 Louise Avenue                       |Linthicum Heights           |MD   |21090|Individual             |Credit Card      |                                                  |                                                                 |$100.00    |2/5/2014       |Mayor |2014
+Carlos Allen For Mayor                    |Carlos Allen   |Brooks, Karen                                |9709 Manteo Ct                          |Ft Washington               |MD   |20744|Individual             |Credit Card      |                                                  |                                                                 |$15.00     |2/25/2014      |Mayor |2014
+Carlos Allen For Mayor                    |Carlos Allen   |Alsbrook, Darrell                            |2470                                    |LakeMeadow Ln               |GA   |30017|Individual             |Credit Card      |                                                  |                                                                 |$20.00     |3/4/2014       |Mayor |2014
 ...
 ```
+
+*Notice* Behind the scenes, all the records between the `from-date`
+and `to-date` are requested from the server, and only filtered locally.
+Also, because office and election year are not included in the source
+record set, it is neccesary to try to guess them from the committee
+name and date of donation. What this ends up meaning is that
+a whole lot of HTTP requests must happen if you request the whole
+date range, which will in turn, take a while.
+
+## API Usage
+
+Feel free to access the pythonn api. Take a look at the functions in
+[dc_campaign_finance-scraper/scraper.py](dc_campaign_finance-scraper/scraper.py).
+
 
 ## Release instructions
 1. `pip install -e .` to make sure it works

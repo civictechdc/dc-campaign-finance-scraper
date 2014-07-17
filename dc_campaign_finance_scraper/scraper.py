@@ -4,6 +4,7 @@ import csv
 import collections
 import functools
 import logging
+from . import tablib
 
 from bs4 import BeautifulSoup
 
@@ -25,7 +26,10 @@ def _records_cookies(options):
 
 
 @utils.log_function
-def records_csv(from_date, to_date, report_type):
+def records(from_date, to_date, report_type):
+    '''
+    :rtype: :py:class:`tablib.Dataset`
+    '''
     # we should sort these so that they are sent in the same order every
     # time and cached correctly
     options = tuple(sorted({
@@ -43,9 +47,17 @@ def records_csv(from_date, to_date, report_type):
     r.raise_for_status()
 
     if 'Your Session is expired. Please try again' in r.text:
-        raise(Exception, 'Cant get records data. Cookie isnt working. Says session expire')
+        raise(
+            Exception,
+            'Cant get records data. Cookie isnt working. Says session expire')
 
-    return r.text
+    headers, *rows = csv.reader(r.text.splitlines())
+
+    def normalize_record(record):
+        record['Candidate Name'] = record['Candidate Name'].strip()
+        return record
+
+    return tablib.Dataset(*rows, headers=headers).map(normalize_record)
 
 
 @utils.log_function
@@ -55,6 +67,11 @@ def election_of_committee(committee, record_year):
     Returns the ofifce and election year, for a certain committee name.
     It starts by looking at all the elections in that year, to see if
     that committee name was running for anything.
+
+    :rtype: tuple of str and int
+    :return: The office that the committee was running for and the year it was
+             running.
+
     '''
     try:
         for possible_office in races(record_year):
@@ -66,38 +83,28 @@ def election_of_committee(committee, record_year):
 
 
 @utils.log_function
-@utils.listify
-def records_for_race(office, election_year, report_type):
+def records_with_office_and_election_year(from_date, to_date, report_type):
     '''
-    All the records for races happening in a year.
-    It needs to get all of the records first, because no matter when a record
-    was recorded, the election year could be a different year. So if you want
-    say records for Mayor in 2014, those donations could be from, technically
-    any year. And because I don't feel like estimating how long before and
-    after the election those donations should be from.
+    :rtype: :py:class:`tablib.Dataset`
     '''
-    from_date = '01/01/1999'
-    to_date = '01/01/9999'
 
-    records = csv.DictReader(records_csv(from_date, to_date, report_type).splitlines())
+    def add_election_columns(record):
+        record['Office'], record["Election Year"] = election_of_committee(
+            record["Committee Name"],
+            utils.year_from_date(record["Date of Receipt"])
+        )
+        return record
 
-    def year_from_date(date):
-        return int(date.split('/')[-1])
-
-    for record in records:
-        # Find the record commitee name and year, so that we can make a guess
-        # at what the office and eleciton year the record is from
-        record_committee = record["Committee Name"]
-        record_submitted_year = year_from_date(record["Date of Receipt"])
-        record_office, record_election_year = election_of_committee(record_committee, record_submitted_year)
-        # if that is the office and record year we want, then we want that record!
-        if record_office == office and record_election_year == election_year:
-            yield record
+    return records(from_date, to_date, report_type).map(add_election_columns)
 
 
 @utils.log_function
 @functools.lru_cache()
 def available_years():
+    '''
+    :rtype: list of int
+    :return: years which records exist for and office names can be generated.
+    '''
     js_with_years_in_it = 'http://geospatial.dcgis.dc.gov/ocf/js/process.js'
     r = requests.get(js_with_years_in_it)
 
@@ -116,6 +123,10 @@ def available_years():
 @utils.log_function
 @functools.lru_cache()
 def offices():
+    '''
+    :rtype: list of str
+    :return: possible offices
+    '''
     html_with_offices_in_it = 'http://geospatial.dcgis.dc.gov/ocf/'
     r = requests.get(html_with_offices_in_it)
     soup = BeautifulSoup(r.text)
@@ -131,6 +142,10 @@ def offices():
 @functools.lru_cache()
 @utils.listify
 def races(year):
+    '''
+    :rtype: list of str
+    :return: all the offices that have races for them, for a certain year
+    '''
     for office in offices():
         if committees(office, year):
             yield office
@@ -151,9 +166,12 @@ def _office_version(office):
 
 
 @utils.log_function
+@utils.listify
 def commitees_in_multiple_years():
     '''
     Checks to see if any committee name runs in elections in multiple years.
+
+    :rtype: list of str
     '''
     years_offices_committees = collections.defaultdict(lambda: collections.defaultdict(list))
     for year in available_years():
@@ -174,6 +192,12 @@ def commitees_in_multiple_years():
 @functools.lru_cache(maxsize=2**9)
 @utils.retry_exp_backoff
 def committees(office, year):
+    '''
+
+    :rtype: list of str
+    :return: all of the committee names running for a certain office in a
+             certain year.
+    '''
     if year not in available_years():
         raise NoData("No data on {} for committees running".format(year))
     url = 'http://geospatial.dcgis.dc.gov/ocf/getData.aspx'

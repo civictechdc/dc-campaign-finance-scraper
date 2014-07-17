@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
 
 import click
-import json
-import datetime
+import tablib.formats
 
 from . import scraper
 from . import utils
+
+year_range = [min(scraper.available_years()), max(scraper.available_years())]
 
 
 @click.group()
@@ -14,7 +15,7 @@ from . import utils
               help='Print log of all HTTP requests',
               show_default=True)
 @click.option('--cache/--no-cache',
-              default=True,
+              default=False,
               help='Cache all requests to file.',
               show_default=True)
 def cli(log, cache):
@@ -24,112 +25,50 @@ def cli(log, cache):
         utils.enable_cache()
 
 
-@cli.command(short_help='List of records (CSV)')
+@cli.command(short_help='List of records')
+@click.option('--office',
+              type=click.Choice(scraper.offices()))
+@click.option('--election-year',
+              type=click.IntRange(*year_range))
+@click.option('--report-type',
+              default='con',
+              help='exp -> expenses, con -> contributions',
+              type=click.Choice(['exp', 'con']),
+              show_default=True)
 @click.option('--from-date',
-              default='01/01/' + str(datetime.datetime.now().year),
+              default='01/01/1999',
               help='First date of records.',
               show_default=True)
 @click.option('--to-date',
               default='01/01/9999',
               help='Last date of records. Future dates are allowed.',
               show_default=True)
-@click.option('--report-type',
-              default='con',
-              help='exp -> expenses, con -> contributions',
-              type=click.Choice(['exp', 'con']),
-              show_default=True)
-def records(**kwargs):
+@click.option('--format',
+              help='Format of out output.',
+              type=click.Choice(map(lambda fmt: fmt.title, tablib.formats.available)))
+def records(format, office, election_year, **kwargs):
     '''
     A list all transactions for all campaigns, between FROM-DATE and TO-DATE.
+
+    Also, if specified, only those for the elction in ELECTION-YEAR and
+    running for the office OFFICE.
+
     Either the expenses of the campaign or the contributions of the
     campaign, based on REPORT-TYPE.
     '''
+    records = scraper.records_with_office_and_election_year(**kwargs)
+
+    if office:
+        records.filter(lambda r: r['Office'] == office)
+    if election_year:
+        records.filter(lambda r: r['Election Year'] == str(election_year))
+
+    if format:
+        output = getattr(records, format)
+    else:
+        output = records
     click.echo(
-        scraper.records_csv(**kwargs),
-        nl=False
-    )
-
-
-@cli.command(short_help='Possible years (JSON)')
-def years():
-    '''
-    Years in which there are records kept of campaign finances. (JSON)
-    '''
-    click.echo(
-        json.dumps(scraper.available_years()),
-        nl=False
-    )
-
-
-@cli.command(short_help='Possible offices (JSON)')
-def offices():
-    '''
-    Offices for DC which are tracked. (JSON)
-    '''
-    click.echo(
-        json.dumps(scraper.offices()),
-        nl=False
-    )
-
-year_range = [scraper.available_years()[0], scraper.available_years()[-1]]
-
-
-@cli.command(short_help='Running committees (JSON)')
-@click.option('--office',
-              default='Council At-Large',
-              show_default=True,
-              type=click.Choice(scraper.offices()))
-@click.option('--year',
-              default=datetime.datetime.now().year,
-              show_default=True,
-              type=click.IntRange(*year_range))
-def committees(**kwargs):
-    '''
-    All committees running for OFFICE in YEAR.
-    '''
-    click.echo(
-        json.dumps(scraper.committees(**kwargs)),
-        nl=False
-    )
-
-
-@cli.command(short_help='Active races in a year (JSON)')
-@click.option('--year',
-              default=datetime.datetime.now().year,
-              show_default=True,
-              type=click.IntRange(*year_range))
-def races(**kwargs):
-    '''
-    All offices that are run for in YEAR
-    '''
-    click.echo(
-        json.dumps(list(scraper.races(**kwargs))),
-        nl=False
-    )
-
-
-@cli.command(short_help='List of records by race and year (JSON)')
-@click.option('--office',
-              default='Council At-Large',
-              show_default=True,
-              type=click.Choice(scraper.offices()))
-@click.option('--election-year',
-              default=datetime.datetime.now().year,
-              show_default=True,
-              type=click.IntRange(*year_range))
-@click.option('--report-type',
-              default='con',
-              help='exp -> expenses, con -> contributions',
-              type=click.Choice(['exp', 'con']),
-              show_default=True)
-def records_json(**kwargs):
-    '''
-    A list all transactions for all campaigns running for OFFICE in YEAR.
-    Either the expenses of the campaign or the contributions of the
-    campaign, based on REPORT-TYPE.
-    '''
-    click.echo(
-        json.dumps(list(scraper.records_for_race(**kwargs))),
+        output,
         nl=False
     )
 

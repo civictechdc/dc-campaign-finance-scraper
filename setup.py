@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="dc-campaign-finance-scraper",
     version="0.4.2",
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests.*"]),
     entry_points={
         'console_scripts': [
             'dc-campaign-finance-scraper=dc_campaign_finance_scraper.cli:cli'
@@ -15,6 +15,7 @@ setup(
         'beautifulsoup4',
         'requests-cache',
         'retrying',
+        'tablib'
     ],
 
     # metadata for upload to PyPI
