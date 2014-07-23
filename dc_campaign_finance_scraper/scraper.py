@@ -54,10 +54,7 @@ def records(from_date, to_date, report_type):
     headers, *rows = csv.reader(r.text.splitlines())
 
     def normalize_record(record):
-        try:
-            record['Candidate Name'] = record['Candidate Name'].strip()
-        except KeyError:
-            pass
+        record['Candidate Name'] = record['Candidate Name'].strip()
         return record
 
     return tablib.Dataset(*rows, headers=headers).map(normalize_record)
