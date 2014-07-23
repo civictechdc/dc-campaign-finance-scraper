@@ -1,0 +1,5 @@
+python:
+  build: .
+  volumes:
+    - dc_campaign_finance_scraper:/code/dc_campaign_finance_scraper
+    - test:/code/test

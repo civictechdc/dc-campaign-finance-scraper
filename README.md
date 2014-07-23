@@ -19,7 +19,7 @@ Usage: dc-campaign-finance-scraper [OPTIONS] COMMAND [ARGS]...
 
 Options:
   --log / --no-log      Print log of all HTTP requests  [default: False]
-  --cache / --no-cache  Cache all requests to file.  [default: False]
+  --cache / --no-cache  Cache all requests to file.  [default: True]
   --help                Show this message and exit.
 
 Commands:
@@ -101,6 +101,15 @@ Feel free to access the pythonn api. Take a look at the functions in
 3. Commit and create tag for version prefixed with "v"
 4. `pip install wheel`
 5. `python setup.py sdist bdist_wheel upload`
+
+
+## Developing locally with Docker
+
+```bash
+fig build python
+fig run fig run python dc-campaign-finance-scraper --help
+fig run fig run python test
+```
 
 ## How did I do it?
 ### Manual Process
