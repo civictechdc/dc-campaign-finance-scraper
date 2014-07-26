@@ -18,6 +18,15 @@ class NoData(Exception):
 logger = logging.getLogger(__name__)
 
 
+def normalize_record(record):
+    record['Candidate Name'] = record['Candidate Name'].strip()
+    return record
+
+
+def normalize_office(office):
+    return office.strip()
+
+
 @utils.log_function
 @cache
 def _records_cookies(options):
@@ -54,10 +63,6 @@ def records(from_date, to_date, report_type):
             'Cant get records data. Cookie isnt working. Says session expire')
 
     headers, *rows = csv.reader(r.text.splitlines())
-
-    def normalize_record(record):
-        record['Candidate Name'] = record['Candidate Name'].strip()
-        return record
 
     return tablib.Dataset(*rows, headers=headers).map(normalize_record)
 
@@ -138,7 +143,8 @@ def offices():
     # sort them by their form value, so they look all nice and ordered
     office_option_elements.sort(key=lambda e: int(e['value']))
 
-    return [e.text for e in office_option_elements]
+    office_names = [e.text for e in office_option_elements]
+    return map(normalize_office, office_names)
 
 
 @utils.log_function
