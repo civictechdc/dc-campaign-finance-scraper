@@ -172,7 +172,7 @@ def _office_version(office):
 
     soup = BeautifulSoup(_get_html())
 
-    return soup.find('option', text=office)['value']
+    return soup.find('option', text=lambda t: normalize_office(t) == office)['value']
 
 
 @utils.log_function
