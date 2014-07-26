@@ -18,14 +18,21 @@ $ dc-campaign-finance-scraper --help
 Usage: dc-campaign-finance-scraper [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  --log / --no-log      Print log of all HTTP requests  [default: False]
-  --cache / --no-cache  Cache all requests to file.  [default: True]
-  --help                Show this message and exit.
+  --log / --no-log                Print log of all HTTP requests  [default:
+                                  False]
+  --persistant-cache / --in-memory-cache
+                                  Cache all responses to a file.  [default:
+                                  True]
+  --help                          Show this message and exit.
 
 Commands:
+  cache_file      Prints the path of the persistant cache.
+  clear_cache     Clear persistant cache
   committees_dup  Checks to see if any committees are duplicated in multiple
                   race
+  offices         Offices that are contested
   records         List of records
+  years           Available Election Years
 ```
 
 To get a list of records of all contributions or expenditures, use the `records`
@@ -89,10 +96,44 @@ name and date of donation. What this ends up meaning is that
 a whole lot of HTTP requests must happen if you request the whole
 date range, which will in turn, take a while.
 
+
+Also, to get all the possible years, in which data office data is available, use
+`years`
+
+```bash
+$ dc-campaign-finance-scraper years
+2010
+2011
+2012
+2013
+2014⏎
+```
+
+And then to see all the possible offices, use `offices`
+
+```bash
+dc-campaign-finance-scraper offices --help
+Usage: dc-campaign-finance-scraper offices [OPTIONS]
+
+  A list of all the offices that are contested, in a certain ELECTION-YEAR.
+  If no ELECTION-YEAR provided, returns all the offices.
+
+  Returns each office on a new line.
+
+Options:
+  --election-year INTEGER RANGE
+  --help                         Show this message and exit.
+```
+
 ## API Usage
 
 Feel free to access the pythonn api. Take a look at the functions in
-[dc_campaign_finance-scraper/scraper.py](dc_campaign_finance-scraper/scraper.py).
+[dc_campaign_finance-scraper/scraper.py](dc_campaign_finance_scraper/scraper.py).
+
+If you want to use the permenant, file based cache, call
+`dc_campaign_finance_scraper.cache.use_persistant_cache()` before calling any
+scraper functions. To clear the cache use 
+`dc_campaign_finance_scraper.cache.clear_persistant_cache()`
 
 
 ## Release instructions

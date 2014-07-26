@@ -1,8 +1,6 @@
 import logging
 import functools
 import retrying
-import tablib
-import requests_cache
 import requests.exceptions
 
 
@@ -29,9 +27,6 @@ def retry_exp_backoff(f):
     return retry_exp_backoff_helper
 
 
-def enable_cache(backend='sqlite', **kwargs):
-    requests_cache.install_cache(allowable_methods=('GET', 'POST'), expire_after=60 * 60 * 24, backend=backend, **kwargs)
-
 indent_level = 0
 
 
@@ -46,7 +41,8 @@ def log_function(f):
     def wrapper(*args, **kwds):
         global indent_level
         argument_string = ', '.join(map(repr, args)) + ', '.join(key + '=' + repr(value) for (key, value) in kwds.items())
-        _log_with_level('{}({})'.format(f.__name__, argument_string))
+        function_name = f.__name__
+        _log_with_level('{}({})'.format(function_name, argument_string))
         indent_level += 1
         try:
             return_output = f(*args, **kwds)

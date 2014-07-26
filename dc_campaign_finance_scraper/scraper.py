@@ -2,13 +2,13 @@ import requests
 import json
 import csv
 import collections
-import functools
 import logging
 from . import tablib
 
 from bs4 import BeautifulSoup
 
 from . import utils
+from .cache import cache
 
 
 class NoData(Exception):
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @utils.log_function
+@cache
 def _records_cookies(options):
     r = requests.post("http://www.ocf.dc.gov/serv/download.asp", options)
     r.raise_for_status()
@@ -26,6 +27,7 @@ def _records_cookies(options):
 
 
 @utils.log_function
+@cache
 def records(from_date, to_date, report_type):
     '''
     :rtype: :py:class:`tablib.Dataset`
@@ -61,7 +63,7 @@ def records(from_date, to_date, report_type):
 
 
 @utils.log_function
-@functools.lru_cache(maxsize=2**9)
+@cache
 def election_of_committee(committee, record_year):
     '''
     Returns the ofifce and election year, for a certain committee name.
@@ -83,6 +85,7 @@ def election_of_committee(committee, record_year):
 
 
 @utils.log_function
+@cache
 def records_with_office_and_election_year(from_date, to_date, report_type):
     '''
     :rtype: :py:class:`tablib.Dataset`
@@ -99,7 +102,7 @@ def records_with_office_and_election_year(from_date, to_date, report_type):
 
 
 @utils.log_function
-@functools.lru_cache()
+@cache
 def available_years():
     '''
     :rtype: list of int
@@ -121,7 +124,7 @@ def available_years():
 
 
 @utils.log_function
-@functools.lru_cache()
+@cache
 def offices():
     '''
     :rtype: list of str
@@ -139,7 +142,7 @@ def offices():
 
 
 @utils.log_function
-@functools.lru_cache()
+@cache
 @utils.listify
 def races(year):
     '''
@@ -152,7 +155,7 @@ def races(year):
 
 
 @utils.log_function
-@functools.lru_cache()
+@cache
 @utils.retry_exp_backoff
 def _office_version(office):
 
@@ -167,6 +170,7 @@ def _office_version(office):
 
 @utils.log_function
 @utils.listify
+@cache
 def commitees_in_multiple_years():
     '''
     Checks to see if any committee name runs in elections in multiple years.
@@ -177,7 +181,6 @@ def commitees_in_multiple_years():
     for year in available_years():
         for office in races(year):
             for committee in committees(office, year):
-
                 for year_test, office_test_dict in years_offices_committees.items():
                     for office_test, committee_test in office_test_dict.items():
                         if committee in committee_test:
@@ -189,7 +192,7 @@ def commitees_in_multiple_years():
 
 
 @utils.log_function
-@functools.lru_cache(maxsize=2**9)
+@cache
 @utils.retry_exp_backoff
 def committees(office, year):
     '''

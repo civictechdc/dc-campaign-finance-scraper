@@ -5,6 +5,7 @@ import tablib.formats
 
 from . import scraper
 from . import utils
+from . import cache
 
 year_range = [min(scraper.available_years()), max(scraper.available_years())]
 
@@ -14,15 +15,25 @@ year_range = [min(scraper.available_years()), max(scraper.available_years())]
               default=False,
               help='Print log of all HTTP requests',
               show_default=True)
-@click.option('--cache/--no-cache',
-              default=False,
-              help='Cache all requests to file.',
+@click.option('--persistant-cache/--in-memory-cache',
+              default=True,
+              help='Cache all responses to a file.',
               show_default=True)
-def cli(log, cache):
+def cli(log, persistant_cache):
     if log:
         utils.enable_logging()
-    if cache:
-        utils.enable_cache()
+    if persistant_cache:
+        cache.use_persistant_cache()
+
+
+@cli.command(short_help='Clear persistant cache')
+def clear_cache():
+    cache.clear_persistant_cache()
+
+
+@cli.command(short_help='Prints the path of the persistant cache.')
+def cache_file():
+    click.echo(cache.CACHE_FILE_NAME)
 
 
 @cli.command(short_help='List of records')
@@ -69,6 +80,42 @@ def records(format, office, election_year, **kwargs):
         output = records
     click.echo(
         output,
+        nl=False
+    )
+
+
+@cli.command(short_help='Available Election Years')
+def years():
+    '''
+    A list of all all the available election years.
+
+    Returns each year on a new line.
+    '''
+    years = scraper.available_years()
+
+    click.echo(
+        '\n'.join(map(str, years)),
+        nl=False
+    )
+
+
+@cli.command(short_help='Offices that are contested')
+@click.option('--election-year',
+              type=click.IntRange(*year_range))
+def offices(election_year=None):
+    '''
+    A list of all the offices that are contested, in a certain ELECTION-YEAR.
+    If no ELECTION-YEAR provided, returns all the offices.
+
+    Returns each office on a new line.
+    '''
+    if election_year:
+        offices = scraper.races(election_year)
+    else:
+        offices = scraper.offices()
+
+    click.echo(
+        '\n'.join(offices),
         nl=False
     )
 

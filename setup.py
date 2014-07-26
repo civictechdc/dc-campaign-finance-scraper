@@ -13,7 +13,6 @@ setup(
         'requests',
         'click',
         'beautifulsoup4',
-        'requests-cache',
         'retrying',
         'tablib'
     ],
