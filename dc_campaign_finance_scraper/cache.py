@@ -53,15 +53,15 @@ def _persistant_cache(filename):
         def wrapper(*args, **kwds):
             args_key = str(hash(functools._make_key(args, kwds, typed=False)))
             func_key = '.'.join([user_function.__module__, user_function.__name__])
-            unique_kye = func_key + args_key
+            unique_key = func_key + args_key
             try:
-                return _check_cache(_handle_dict[filename], unique_kye,
+                return _check_cache(_handle_dict[filename], unique_key,
                                     user_function, args, kwds)
             except KeyError:
 
                 with shelve.open(filename, writeback=True) as cache:
                     _handle_dict[filename] = cache
-                    return _check_cache(cache, unique_kye, user_function, args, kwds)
+                    return _check_cache(cache, unique_key, user_function, args, kwds)
 
         return wrapper
 
