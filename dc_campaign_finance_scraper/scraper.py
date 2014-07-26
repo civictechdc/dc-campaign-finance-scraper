@@ -130,6 +130,7 @@ def available_years():
 
 @utils.log_function
 @cache
+@utils.listify
 def offices():
     '''
     :rtype: list of str
