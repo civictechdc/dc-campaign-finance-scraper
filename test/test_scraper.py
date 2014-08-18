@@ -1,10 +1,8 @@
-import vcr
 from dc_campaign_finance_scraper import scraper
 from dc_campaign_finance_scraper import utils
 
 
 class TestRecords(object):
-    @vcr.use_cassette('test/vcr_cassettes/records.yaml')
     def test_gets_ellissa(self):
 
         records = scraper.records('01/01/2014', '01/01/2015', 'con')
