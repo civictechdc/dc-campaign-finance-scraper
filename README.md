@@ -140,8 +140,7 @@ scraper functions. To clear the cache use
 1. `pip install -e .` to make sure it works
 2. Bump version in `./setup.py`
 3. Commit and create tag for version prefixed with "v"
-4. `pip install wheel`
-5. `python setup.py sdist bdist_wheel upload`
+4. Push to Github and if Travis CI passes, it will deploy
 
 
 ## Developing locally with Docker
