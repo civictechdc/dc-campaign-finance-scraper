@@ -1,7 +1,13 @@
 language: python
 python:
-  - "3.4"
-
+- '3.4'
 install: pip install -r requirements-testing.txt
-
 script: py.test
+deploy:
+  provider: pypi
+  user: saulshanabrook
+  password:
+    secure: dm9+me1E1GX0ozquWs4W6fx//d4PhZ4z2/5L4JkXgXcn47PZFpKDCzcpOJ16fsiMWxfxQW4Vbw6uoOzNgBFg1Vex2VBciLyhARcF+cku8IXkR8m3YSVAC4+OvLPLZ7/GQ27dG/KXM4NHwGIdj+hQZrbOpH8Y02Rp+or9D5w/0W4=
+  on:
+    tags: true
+    repo: codefordc/dc-campaign-finance-scraper
