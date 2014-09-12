@@ -1,5 +1,7 @@
 # dc-campaign-finance-scraper
 
+[![Build Status](https://travis-ci.org/codefordc/dc-campaign-finance-scraper.svg?branch=master)](https://travis-ci.org/codefordc/dc-campaign-finance-scraper)
+
 ## Install
 ```bash
 $ pip install dc-campaign-finance-scraper
@@ -132,7 +134,7 @@ Feel free to access the pythonn api. Take a look at the functions in
 
 If you want to use the permenant, file based cache, call
 `dc_campaign_finance_scraper.cache.use_persistant_cache()` before calling any
-scraper functions. To clear the cache use 
+scraper functions. To clear the cache use
 `dc_campaign_finance_scraper.cache.clear_persistant_cache()`
 
 
